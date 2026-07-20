@@ -1,0 +1,539 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── page ground: white + cobalt halftone dot field, fading toward edges ── */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #ffffff;
+  font-family: 'Press Start 2P', monospace;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at center, rgba(43, 82, 214, 0.3) 1.7px, transparent 1.8px),
+    radial-gradient(circle at center, rgba(43, 82, 214, 0.16) 1.1px, transparent 1.2px);
+  background-size:
+    22px 22px,
+    22px 22px;
+  background-position:
+    0 0,
+    11px 11px;
+}
+
+/* fade the dot field out toward the edges */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 90% 80% at 50% 45%, transparent 40%, #ffffff 92%);
+}
+
+.app-root {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── highlighter splotches ── */
+.splotch {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(26px);
+}
+.splotch-yellow {
+  width: 340px;
+  height: 90px;
+  left: -60px;
+  top: 110px;
+  background: rgba(255, 230, 0, 0.5);
+  transform: rotate(-14deg);
+}
+.splotch-pink {
+  width: 300px;
+  height: 80px;
+  right: -50px;
+  top: 42%;
+  background: rgba(255, 92, 168, 0.38);
+  transform: rotate(11deg);
+}
+.splotch-yellow-2 {
+  width: 260px;
+  height: 70px;
+  left: 30%;
+  bottom: 40px;
+  background: rgba(255, 230, 0, 0.35);
+  transform: rotate(6deg);
+}
+
+/* ── camcorder OSD status bar ── */
+.osd-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: #141414;
+  border-bottom: 2px solid #141414;
+  background: rgba(255, 255, 255, 0.92);
+}
+.osd-clock {
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  letter-spacing: 0.2em;
+}
+.rec-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: #141414;
+}
+.rec-on {
+  background: #f2509e;
+  animation: rec-blink 1s steps(2, start) infinite;
+}
+.rec-off {
+  background: #9aa0aa;
+}
+@keyframes rec-blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/* ── layout ── */
+.main-layout {
+  flex: 1;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 22px 18px;
+  min-height: 0;
+}
+
+.poster-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.console-column {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+/* ── hand-drawn title ── */
+.title-wrap {
+  position: relative;
+  text-align: center;
+  transform: rotate(-2deg);
+  margin-bottom: 2px;
+}
+.title-hand {
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+  color: #2b52d6;
+  margin: 0;
+}
+.title-squiggle {
+  width: 220px;
+  height: 14px;
+  display: block;
+  margin: -4px auto 0;
+}
+.title-tag {
+  display: inline-block;
+  margin-top: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  color: #141414;
+  background: #ffe600;
+  padding: 4px 8px;
+  border: 2px solid #141414;
+}
+
+/* ── poster frame ── */
+.poster-frame {
+  position: relative;
+  border: 2px solid #141414;
+  box-shadow: 6px 6px 0 #141414;
+  background: #fdfdf8;
+  line-height: 0;
+}
+.poster-canvas {
+  display: block;
+  /* CSS-scaled: height-capped so everything fits one viewport */
+  height: min(62vh, 800px);
+  width: auto;
+  aspect-ratio: 3 / 4;
+  touch-action: none;
+  cursor: grab;
+}
+.poster-canvas:active {
+  cursor: grabbing;
+}
+
+/* washi tape strips */
+.washi {
+  position: absolute;
+  width: 118px;
+  height: 30px;
+  z-index: 3;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.22) 0 6px,
+      transparent 6px 12px
+    ),
+    rgba(43, 82, 214, 0.55);
+  clip-path: polygon(
+    3% 8%, 8% 0, 94% 4%, 100% 14%, 97% 88%, 92% 100%, 6% 96%, 0 84%
+  );
+}
+.washi-tl {
+  top: -16px;
+  left: -34px;
+  transform: rotate(-38deg);
+}
+.washi-br {
+  bottom: -14px;
+  right: -32px;
+  transform: rotate(-32deg);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.22) 0 6px,
+      transparent 6px 12px
+    ),
+    rgba(242, 80, 158, 0.5);
+}
+
+/* SVG doodles around the frame */
+.doodle {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+}
+.doodle-star {
+  width: 38px;
+  top: -20px;
+  right: -16px;
+  transform: rotate(18deg);
+}
+.doodle-squig {
+  width: 56px;
+  bottom: -14px;
+  left: -24px;
+  transform: rotate(-9deg);
+}
+
+/* ── empty-state dropzone ── */
+.dropzone {
+  position: absolute;
+  inset: 14px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: transparent;
+  border: 2px dashed #141414;
+  cursor: pointer;
+}
+.dropzone-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: #141414;
+}
+.dropzone-sub {
+  font-size: 8px;
+  color: #2b52d6;
+}
+.dropzone-arrow {
+  width: 72px;
+  transform: rotate(-8deg);
+}
+
+/* ── buttons ── */
+.btn-pixel {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #ffffff;
+  color: #141414;
+  border: 2px solid #141414;
+  border-radius: 0;
+  padding: 11px 12px;
+  box-shadow: 3px 3px 0 #141414;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-pixel:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+.btn-accent {
+  background: #2b52d6;
+  color: #ffffff;
+}
+.btn-xs {
+  font-size: 7px;
+  padding: 6px 8px;
+}
+.btn-pixel:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── control console ── */
+.console {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border: 2px solid #141414;
+  background: #ffffff;
+  box-shadow: 6px 6px 0 #141414;
+  padding: 16px;
+}
+.btn-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.panel-block {
+  border-top: 2px dashed #141414;
+  padding-top: 14px;
+}
+.panel-block:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* ── sliders ── */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.slider-row:last-child {
+  margin-bottom: 0;
+}
+.slider-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: #141414;
+  width: 78px;
+  flex-shrink: 0;
+}
+.slider-value {
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: #2b52d6;
+  width: 42px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.pixel-range {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 2px;
+  background: #141414;
+  outline: none;
+  cursor: pointer;
+}
+.pixel-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border: 5px solid #141414;
+  border-radius: 0;
+  cursor: pointer;
+}
+.pixel-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border: 5px solid #141414;
+  border-radius: 0;
+  cursor: pointer;
+}
+.pixel-range::-moz-range-track {
+  height: 2px;
+  background: #141414;
+}
+.slider-disabled {
+  opacity: 0.35;
+}
+.slider-disabled .pixel-range {
+  cursor: not-allowed;
+}
+
+/* ── ink swatches ── */
+.swatch {
+  width: 28px;
+  height: 28px;
+  border: 2px solid #141414;
+  border-radius: 0;
+  cursor: pointer;
+  padding: 0;
+}
+.swatch-selected {
+  outline: 3px solid #141414;
+  outline-offset: 3px;
+}
+
+/* ── pixel input ── */
+.pixel-input {
+  flex: 1;
+  min-width: 0;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 2px solid #141414;
+  border-radius: 0;
+  padding: 6px 8px;
+  background: #ffffff;
+  color: #141414;
+  outline: none;
+}
+.pixel-input:focus {
+  box-shadow: 3px 3px 0 #2b52d6;
+}
+
+/* ── sticker tray ── */
+.sticker-tray {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  max-width: min(92vw, 560px);
+  padding: 6px 2px 10px;
+  scrollbar-width: thin;
+}
+.tray-group {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tray-group-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: #141414;
+  border-bottom: 2px solid #141414;
+  padding-bottom: 4px;
+  white-space: nowrap;
+}
+.tray-group-thumbs {
+  display: flex;
+  gap: 8px;
+}
+.tray-thumb {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 2px solid #141414;
+  background: #ffffff;
+  border-radius: 0;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+.tray-thumb:hover {
+  background: #2b52d6;
+}
+
+/* ── camera modal ── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(20, 20, 20, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-box {
+  background: #ffffff;
+  border: 2px solid #141414;
+  box-shadow: 6px 6px 0 #141414;
+  width: min(520px, 94vw);
+}
+.modal-osd {
+  border-bottom: 2px solid #141414;
+}
+.modal-stage {
+  background: #141414;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mirrored {
+  transform: scaleX(-1);
+}
+
+/* ── mobile ── */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+    gap: 18px;
+    padding: 12px 10px 24px;
+    align-items: center;
+  }
+  .console-column {
+    width: min(92vw, 420px);
+  }
+  .poster-canvas {
+    height: auto;
+    width: min(92vw, 450px);
+  }
+  .title-hand {
+    font-size: 34px;
+  }
+  .splotch {
+    opacity: 0.7;
+  }
+}
