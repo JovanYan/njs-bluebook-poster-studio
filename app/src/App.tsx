@@ -4,6 +4,7 @@ import PosterCanvas from './components/PosterCanvas'
 import Controls from './components/Controls'
 import StickerTray, { TrayGroup } from './components/StickerTray'
 import CameraModal from './components/CameraModal'
+import TvBackground from './components/TvBackground'
 import { DEFAULT_HALFTONE, HalftoneSettings } from './lib/halftone'
 import {
   PhotoState,
@@ -141,6 +142,9 @@ export default function App() {
 
   return (
     <div className="app-root">
+      {/* animated retro-TV background (bottom-most layer) */}
+      <TvBackground />
+
       {/* highlighter splotches */}
       <div className="splotch splotch-yellow" />
       <div className="splotch splotch-pink" />

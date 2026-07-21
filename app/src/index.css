@@ -54,7 +54,7 @@ body::after {
 /* ── highlighter splotches ── */
 .splotch {
   position: fixed;
-  z-index: 0;
+  z-index: -2; /* base layer, under the TV layer */
   pointer-events: none;
   border-radius: 50%;
   filter: blur(26px);
@@ -535,5 +535,334 @@ body::after {
   }
   .splotch {
     opacity: 0.7;
+  }
+}
+
+/* ── retro TV animated background ── */
+.tv-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1; /* above dot field + splotches, below all content */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.tv-set {
+  position: absolute;
+  left: -84px;
+  top: 50%;
+  width: 392px;
+  transform: translateY(-50%) rotate(-2deg);
+}
+
+/* antennas */
+.tv-antenna {
+  position: absolute;
+  top: -76px;
+  width: 4px;
+  height: 92px;
+  background: #141414;
+  transform-origin: bottom center;
+}
+.tv-antenna::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -4px;
+  width: 12px;
+  height: 12px;
+  background: #2b52d6;
+  border: 2px solid #141414;
+  border-radius: 50%;
+}
+.tv-antenna-l {
+  left: 150px;
+  transform: rotate(-24deg);
+}
+.tv-antenna-r {
+  left: 210px;
+  transform: rotate(22deg);
+}
+
+/* body */
+.tv-body {
+  display: flex;
+  gap: 14px;
+  padding: 20px 18px;
+  background: #141414;
+  border: 2px solid #141414;
+  border-radius: 20px;
+  box-shadow: 6px 6px 0 rgba(20, 20, 20, 0.9);
+}
+
+/* screen: inset rounded rect */
+.tv-screen {
+  position: relative;
+  width: 264px;
+  aspect-ratio: 3 / 4;
+  border-radius: 14px;
+  border: 2px solid #000000;
+  overflow: hidden;
+  background: #2b52d6;
+}
+
+/* cobalt halftone-dot screen base (also the missing-poster fallback) */
+.tv-screen-bg {
+  position: absolute;
+  inset: 0;
+  background-color: #2b52d6;
+  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.5) 1.6px, transparent 1.8px);
+  background-size: 12px 12px;
+}
+
+/* slideshow posters */
+.tv-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.15s steps(2, end);
+}
+.tv-poster.on {
+  opacity: 1;
+}
+
+/* bunny station ident */
+.tv-ident {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #2b52d6;
+  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.55) 1.6px, transparent 1.8px);
+  background-size: 12px 12px;
+  opacity: 0;
+}
+.tv-ident.on {
+  opacity: 1;
+}
+.tv-ident img {
+  width: 62%;
+  filter: drop-shadow(4px 4px 0 rgba(20, 20, 20, 0.9));
+}
+
+/* static noise burst (hidden unless glitching) */
+.tv-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.95) 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(20, 20, 20, 0.95) 1px, transparent 1.6px);
+  background-size:
+    7px 7px,
+    11px 11px;
+}
+.glitch .tv-noise {
+  opacity: 0.85;
+  animation: tv-noise-jump 0.12s steps(2, end) infinite;
+}
+.hard .tv-noise {
+  opacity: 1;
+}
+@keyframes tv-noise-jump {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+  }
+  50% {
+    background-position:
+      3px 5px,
+      -4px 2px;
+  }
+  100% {
+    background-position:
+      -5px -2px,
+      6px -3px;
+  }
+}
+
+/* horizontal scanline tear band during the glitch */
+.tv-tear {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 20%;
+  height: 11%;
+  background: rgba(255, 255, 255, 0.4);
+  opacity: 0;
+}
+.glitch .tv-tear {
+  opacity: 1;
+  animation: tv-tear 0.4s steps(3, end);
+}
+@keyframes tv-tear {
+  0% {
+    top: 12%;
+    transform: translateX(-6px);
+  }
+  50% {
+    top: 58%;
+    transform: translateX(5px);
+  }
+  100% {
+    top: 34%;
+    transform: translateX(0);
+  }
+}
+
+/* RGB-split + jitter on the visible channel while glitching */
+.glitch .tv-poster.on,
+.glitch .tv-ident.on {
+  filter: drop-shadow(3px 0 rgba(242, 80, 158, 0.85)) drop-shadow(-3px 0 rgba(43, 82, 214, 0.85));
+  animation: tv-jitter 0.4s steps(2, end);
+}
+.hard .tv-poster.on,
+.hard .tv-ident.on {
+  filter: drop-shadow(5px 0 rgba(242, 80, 158, 0.9)) drop-shadow(-5px 0 rgba(43, 82, 214, 0.9));
+}
+@keyframes tv-jitter {
+  0% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* permanent scanlines */
+.tv-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.16) 0 2px,
+    transparent 2px 4px
+  );
+}
+
+/* CRT vignette + faint glass curvature */
+.tv-crt {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.5),
+    inset 0 5px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* side panel: knobs + speaker */
+.tv-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+  width: 52px;
+}
+.tv-knob {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #000000;
+}
+.tv-knob-blue {
+  background: #2b52d6;
+}
+.tv-knob-white {
+  background: #fdfdf8;
+}
+.tv-knob-pink {
+  background: #f2509e;
+}
+.tv-speaker {
+  margin-top: 8px;
+  width: 44px;
+  height: 120px;
+  border-radius: 6px;
+  background: repeating-linear-gradient(0deg, #000000 0 3px, #2b52d6 3px 8px);
+  border: 2px solid #000000;
+}
+
+/* feet */
+.tv-foot {
+  position: absolute;
+  bottom: -10px;
+  width: 46px;
+  height: 14px;
+  background: #141414;
+  border: 2px solid #141414;
+}
+.tv-foot-l {
+  left: 60px;
+}
+.tv-foot-r {
+  right: 60px;
+}
+
+/* tiny pixel sparkles elsewhere in the background */
+.pixel-sparkle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #ffe600;
+  border: 2px solid #141414;
+  animation: ps-blink 1.6s steps(2, start) infinite;
+}
+.ps-1 {
+  right: 12%;
+  top: 16%;
+}
+.ps-2 {
+  right: 28%;
+  bottom: 12%;
+  background: #f2509e;
+  animation-delay: 0.8s;
+}
+@keyframes ps-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* mid-size screens: shrink + tuck into the corner at low opacity */
+@media (max-width: 1023px) {
+  .tv-set {
+    left: auto;
+    right: -60px;
+    top: auto;
+    bottom: 8px;
+    transform: scale(0.55) rotate(-2deg);
+    transform-origin: bottom right;
+    opacity: 0.35;
+  }
+}
+
+/* mobile: hidden entirely */
+@media (max-width: 767px) {
+  .tv-layer {
+    display: none;
+  }
+}
+
+/* reduced motion: no glitch/bunny/noise/sparkle animation */
+@media (prefers-reduced-motion: reduce) {
+  .tv-noise,
+  .tv-tear,
+  .pixel-sparkle {
+    animation: none;
+    opacity: 0;
+  }
+  .glitch .tv-poster.on,
+  .glitch .tv-ident.on {
+    filter: none;
+    animation: none;
   }
 }

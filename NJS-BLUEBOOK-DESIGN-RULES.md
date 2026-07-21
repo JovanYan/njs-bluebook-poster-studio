@@ -58,6 +58,11 @@ UI 文案全部为英文全大写（匹配 Bluebook  aesthetic）。禁止用纯
 - **状态栏**（顶部，录像机 OSD 风）：左侧 `● REC`/`STANDBY`（CSS steps 闪烁）、中央实时时钟 `HH:MM:SS`、右侧日期 `YYYY.MM.DD`
 - **空状态**：海报框内 2px 黑色虚线投放区 + 像素字体指引 + SVG 大箭头涂鸦
 - **贴纸缩略图**：44px 方块、2px 黑边、白底、hover 反蓝；分组标题为 8px 像素字体 + 2px 黑色下划线
+- **TV 动效背景层**（`TvBackground.tsx`）：扁平矢量复古 CRT 电视机（`#141414` 机身、钴蓝点缀、双天线、旋钮、-2° 倾斜、左侧出血、6px 硬阴影），屏幕为 3:4 内嵌圆角矩形。层序：点阵底 → 荧光斑点 → TV（`z-index:-1`、`pointer-events:none`）→ 内容
+  - 屏幕循环播放 `assets/tv/poster-1~3.png`（蓝调网点人像，4s/张），切台特效 = RGB 分离 + 扫描线撕裂带 + 静噪 burst（纯 CSS `steps()`，0.4s）
+  - 每 10–14s（随机）切入白色兔子 logo 台标（钴蓝点阵底）0.8–1.2s 硬故障进出
+  - 常驻扫描线 + CRT 内阴影曲面；海报加载失败自动退化为钴蓝点阵 + 兔子（绝不出现破图）
+  - 响应式：<1024px 缩至 55% 透明度 0.35  tucked 右下；<768px 隐藏；`prefers-reduced-motion` 停掉全部动效显示静态海报
 
 ---
 
@@ -117,6 +122,7 @@ UI 文案全部为英文全大写（匹配 Bluebook  aesthetic）。禁止用纯
 
 - 25 张贴纸 PNG：1024×1024、RGBA、四角全透明（模切白边、透明底），位于 `app/public/assets/stickers/`
 - 示例人像：`app/public/assets/sample/sample-portrait.png`（2:3，90s 胶片感棚拍）
+- TV 背景海报：`app/public/assets/tv/poster-1~3.png`（2:3 蓝调粗网点人像，供 TV 屏幕轮播）
 
 ### 4.2 素材再生成
 
@@ -154,6 +160,7 @@ app/src/
     ├── Controls.tsx         # 按钮状态机 + DOT/INK/CONTRAST/FLASH/RANGE 滑杆 + 墨色色块
     ├── StickerTray.tsx      # 分组贴纸栏
     ├── CameraModal.tsx      # 摄像头弹窗
+    ├── TvBackground.tsx     # TV 动效背景层（海报轮播 + 兔子台标闪现）
     └── StatusBar.tsx        # OSD 状态栏
 ```
 
@@ -163,9 +170,10 @@ app/src/
 2. **不留孤儿进程**：测试用临时服务器（非 7100 端口）用后必须 kill；为用户服务时启动的 7100 服务器需明确告知其在运行
 3. **修改流程**：先查本文档 → 改代码 → `npm run build` 验证 → 同步更新本文档对应章节
 4. **设计红线**：第 2 章色彩/字体禁令、第 3 章真实网点算法与闪光三层结构、文字贴纸本地渲染，均为不可降级项
-5. 工作区曾被意外清空过一次（2026-07-18）：素材可用 `gen_all_v2.sh` 整体重建，代码即文档所述结构——任何重大变更后建议提交 git 快照
-6. Bash 审批在本机频繁超时：批量操作尽量合并为单条命令；关键脚本落盘保存以便复跑
+5. 工作区曾被意外清空过一次（2026-07-18）：素材可用 `gen_all_v2.sh` 整体重建，代码即文档所述结构
+6. **Git 备份**：私仓 `github.com/JovanYan/njs-bluebook-poster-studio`。本机 github.com:443（git 协议）不可达但 api.github.com 正常，推送用工作区根目录 `push_to_github.py`（Git Data API：blobs→tree→commit→ref，支持二进制）；每次重大变更后运行一次增量备份
+7. Bash 审批在本机频繁超时：批量操作尽量合并为单条命令；关键脚本落盘保存以便复跑
 
 ---
 
-*文档版本：v1.0 · 2026-07-21 · 覆盖功能：半调引擎、闪光三调系统、25+9 贴纸、名牌生成器、四组贴纸栏、移动端适配*
+*文档版本：v1.1 · 2026-07-21 · 覆盖功能：半调引擎、闪光三调系统、25+9 贴纸、名牌生成器、四组贴纸栏、TV 动效背景、移动端适配、GitHub API 备份*
