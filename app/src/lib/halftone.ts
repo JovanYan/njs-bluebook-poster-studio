@@ -163,7 +163,9 @@ export function renderHalftone(
       l += flashModulation(x / W, y / H, flash01, s.flashX, s.flashY, range01)
       l = l < 0 ? 0 : l > 1 ? 1 : l
       const r = dotRadius(l, cell, s.inkGain)
-      if (r < 0.35) continue
+      // cutoff is proportional to the cell so preview and export (2.5x)
+      // drop the SAME relative dots — a fixed px cutoff would ink more at export
+      if (r < cell * 0.05) continue
       ctx.moveTo(x + r, y)
       ctx.arc(x, y, r, 0, Math.PI * 2)
     }

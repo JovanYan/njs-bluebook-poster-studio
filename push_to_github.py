@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path("/Users/zhuofan/Documents/Kimi/Workspaces/NJS Bluebook")
 OWNER, REPO, BRANCH = "JovanYan", "njs-bluebook-poster-studio", "main"
-IGNORE_DIRS = {"node_modules", "dist", ".git", "__pycache__"}
+IGNORE_DIRS = {"node_modules", "dist", ".git", "__pycache__", ".dev-refs"}
 IGNORE_SUFFIX = {".log", ".DS_Store"}
 
 token = subprocess.check_output(["gh", "auth", "token"], text=True).strip()
@@ -26,11 +26,19 @@ HEADERS = {
 API = f"https://api.github.com/repos/{OWNER}/{REPO}"
 
 
-def req(method, url, payload=None):
+def req(method, url, payload=None, retries=4):
     data = json.dumps(payload).encode() if payload is not None else None
-    r = urllib.request.Request(url, data=data, headers=HEADERS, method=method)
-    with urllib.request.urlopen(r, timeout=60) as resp:
-        return json.loads(resp.read() or b"{}")
+    last = None
+    for attempt in range(retries):
+        try:
+            r = urllib.request.Request(url, data=data, headers=HEADERS, method=method)
+            with urllib.request.urlopen(r, timeout=60) as resp:
+                return json.loads(resp.read() or b"{}")
+        except Exception as e:  # network flake: retry with backoff
+            last = e
+            import time
+            time.sleep(2 * (attempt + 1))
+    raise last
 
 
 def collect_files():
@@ -48,6 +56,7 @@ def collect_files():
 
 
 def main():
+    import hashlib
     files = collect_files()
     print(f"{len(files)} files to push")
 
@@ -60,18 +69,35 @@ def main():
     except Exception:
         print("empty repo, creating first commit")
 
-    entries = []
+    # fetch existing tree so unchanged blobs can be reused (huge speedup)
+    existing_shas = {}
+    if existing_sha:
+        commit0 = req("GET", f"{API}/git/commits/{existing_sha}")
+        tree0 = req("GET", f"{API}/git/trees/{commit0['tree']['sha']}?recursive=1")
+        for item in tree0.get("tree", []):
+            if item.get("type") == "blob":
+                existing_shas[item["path"]] = item["sha"]
+
+    def local_blob_sha(raw: bytes) -> str:
+        return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+
+    entries, uploaded, reused = [], 0, 0
     for i, rel in enumerate(files, 1):
         raw = (ROOT / rel).read_bytes()
-        try:
-            content = raw.decode("utf-8")
-            blob = req("POST", f"{API}/git/blobs", {"content": content, "encoding": "utf-8"})
-        except UnicodeDecodeError:
-            b64 = base64.b64encode(raw).decode()
-            blob = req("POST", f"{API}/git/blobs", {"content": b64, "encoding": "base64"})
-        entries.append({"path": str(rel), "mode": "100644", "type": "blob", "sha": blob["sha"]})
+        sha = local_blob_sha(raw)
+        if existing_shas.get(str(rel)) == sha:
+            reused += 1
+        else:
+            try:
+                blob = req("POST", f"{API}/git/blobs", {"content": raw.decode("utf-8"), "encoding": "utf-8"})
+            except UnicodeDecodeError:
+                b64 = base64.b64encode(raw).decode()
+                blob = req("POST", f"{API}/git/blobs", {"content": b64, "encoding": "base64"})
+            sha = blob["sha"]
+            uploaded += 1
+        entries.append({"path": str(rel), "mode": "100644", "type": "blob", "sha": sha})
         if i % 10 == 0 or i == len(files):
-            print(f"  blobs: {i}/{len(files)}")
+            print(f"  files: {i}/{len(files)} (uploaded {uploaded}, reused {reused})")
 
     tree_payload = {"tree": entries}
     if existing_sha:

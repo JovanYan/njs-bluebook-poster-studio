@@ -1,6 +1,20 @@
 // poster.ts — the full poster pipeline shared by preview and export.
 // Preview renders at 600x800; export re-runs the IDENTICAL pipeline at
 // 1500x2000 (EXPORT_SCALE = 2.5), so the PNG matches the preview exactly.
+//
+// ── COORDINATE CONTRACT (WYSIWYG guarantee) ─────────────────────────────
+// All user-controllable geometry is stored in PREVIEW-SPACE units of the
+// 600x800 frame (equivalent to normalized coords via /600, /800):
+//   photo pan t.x/t.y ..... preview px, scaled by scaleMul at render time
+//   photo zoom t.scale .... dimensionless multiplier on top of cover-fit
+//   sticker x/y/rotation .. preview px / radians, scaled by scaleMul
+//   sticker baseSize ...... preview px width at scale 1, scaled by scaleMul
+//   flashX/flashY ......... already normalized 0..1, used directly
+//   halftone cell ......... preview px, scaled by scaleMul before rendering
+// Every render path receives `scaleMul` (1 = preview, 2.5 = export) and
+// multiplies ALL of the above by it — nothing may use raw preview sizes
+// when scaleMul != 1 (cover-fit must use the scaled W/H).
+// ─────────────────────────────────────────────────────────────────────────
 
 import {
   HalftoneSettings,
@@ -61,7 +75,10 @@ export function drawFramedPhoto(
 ): void {
   const W = POSTER_W * scaleMul
   const H = POSTER_H * scaleMul
-  const cover = coverScale(photo) * photo.t.scale
+  // cover-fit MUST be computed against the CURRENT render size — using the
+  // preview defaults here is what made exports look zoomed-out (photo drawn
+  // at preview size inside the 1500x2000 frame)
+  const cover = coverScale(photo, W, H) * photo.t.scale
   const dw = photo.imgW * cover
   const dh = photo.imgH * cover
   const dx = (W - dw) / 2 + photo.t.x * scaleMul
@@ -262,6 +279,19 @@ export function exportPosterPNG(
   c.height = EXPORT_H
   const ctx = c.getContext('2d')
   if (!ctx) return
+
+  // dev-only self-check: at export scale the framed photo must still cover
+  // the entire frame (no paper margins => same crop as the preview)
+  if (import.meta.env.DEV && photo) {
+    const cover = coverScale(photo, EXPORT_W, EXPORT_H) * photo.t.scale
+    const dw = photo.imgW * cover
+    const dh = photo.imgH * cover
+    console.assert(
+      dw >= EXPORT_W - 0.5 && dh >= EXPORT_H - 0.5,
+      `[njs] export framing broken: photo ${dw.toFixed(0)}x${dh.toFixed(0)} in ${EXPORT_W}x${EXPORT_H} frame`,
+    )
+  }
+
   renderPoster(ctx, photo, settings, stickers, { scaleMul: EXPORT_SCALE })
   c.toBlob((blob) => {
     if (!blob) return
